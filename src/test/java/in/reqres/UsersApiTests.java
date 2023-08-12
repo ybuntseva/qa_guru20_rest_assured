@@ -96,7 +96,6 @@ public class UsersApiTests extends TestBase {
                 .log().body()
                 .statusCode(200)
                 .body("name", is("morpheus"), "job", is("zion resident"));
-
     }
 
     @Test
@@ -117,7 +116,6 @@ public class UsersApiTests extends TestBase {
                 .log().body()
                 .statusCode(200)
                 .body("name", is("john"), "job", is("plumber"));
-
     }
 
     @Test
