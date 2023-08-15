@@ -1,10 +1,13 @@
-package in.reqres;
+package in.reqres.tests;
 
+import in.reqres.models.UserInfoBodyModel;
+import in.reqres.models.UserInfoResponseModel;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class UsersApiTests extends TestBase {
 
@@ -61,9 +64,13 @@ public class UsersApiTests extends TestBase {
     @Test
     void successfulUserCreationTest() {
 
-        String inputUserData = "{\"name\": \"morpheus\",\n" + "\"job\": \"leader\"}"; // BAD PRACTICE
+//        String inputUserData = "{\"name\": \"morpheus\",\n" + "\"job\": \"leader\"}"; // BAD PRACTICE
 
-        given()
+        UserInfoBodyModel inputUserData = new UserInfoBodyModel();
+        inputUserData.setName("morpheus");
+        inputUserData.setJob("leader");
+
+        UserInfoResponseModel userCreationResponse = given()
                 .log().uri()
                 .log().method()
                 .log().body()
@@ -75,15 +82,22 @@ public class UsersApiTests extends TestBase {
                 .log().status()
                 .log().body()
                 .statusCode(201)
-                .body("name", is("morpheus"), "job", is("leader"));
+                .extract().as(UserInfoResponseModel.class);
+
+        assertEquals("morpheus", userCreationResponse.getName());
+        assertEquals("leader", userCreationResponse.getJob());
     }
 
     @Test
     void successfullyUserUpdateWithPatch() {
 
-        String updateUserData = "{\"name\": \"morpheus\",\n" + "\"job\": \"zion resident\"}"; // BAD PRACTICE
+//        String updateUserData = "{\"name\": \"morpheus\",\n" + "\"job\": \"zion resident\"}"; // BAD PRACTICE
 
-        given()
+        UserInfoBodyModel updateUserData = new UserInfoBodyModel();
+        updateUserData.setName("morpheus");
+        updateUserData.setJob("leader");
+
+        UserInfoResponseModel userUpdateResponse = given()
                 .log().uri()
                 .log().method()
                 .log().body()
@@ -95,15 +109,22 @@ public class UsersApiTests extends TestBase {
                 .log().status()
                 .log().body()
                 .statusCode(200)
-                .body("name", is("morpheus"), "job", is("zion resident"));
+                .extract().as(UserInfoResponseModel.class);
+
+                assertEquals("morpheus", userUpdateResponse.getName());
+                assertEquals("leader", userUpdateResponse.getJob());
     }
 
     @Test
     void successfullyUserUpdateWithPut() {
 
-        String updateUserData = "{\"name\": \"john\",\n" + "\"job\": \"plumber\"}"; // BAD PRACTICE
+//        String updateUserData = "{\"name\": \"john\",\n" + "\"job\": \"plumber\"}"; // BAD PRACTICE
 
-        given()
+        UserInfoBodyModel updateUserData = new UserInfoBodyModel();
+        updateUserData.setName("john");
+        updateUserData.setJob("plumber");
+
+        UserInfoResponseModel userUpdateResponse = given()
                 .log().uri()
                 .log().method()
                 .log().body()
@@ -115,7 +136,10 @@ public class UsersApiTests extends TestBase {
                 .log().status()
                 .log().body()
                 .statusCode(200)
-                .body("name", is("john"), "job", is("plumber"));
+                .extract().as(UserInfoResponseModel.class);
+
+        assertEquals("john", userUpdateResponse.getName());
+        assertEquals("plumber", userUpdateResponse.getJob());
     }
 
     @Test
