@@ -1,64 +1,62 @@
 package in.reqres.tests;
 
+import in.reqres.models.SingleUserResponseModel;
 import in.reqres.models.UserInfoBodyModel;
 import in.reqres.models.UserInfoResponseModel;
+import in.reqres.models.UserListInfoModel;
 import org.junit.jupiter.api.Test;
 
+import static in.reqres.specs.UsersSpec.*;
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.JSON;
-import static org.hamcrest.Matchers.is;
+import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class UsersApiTests extends TestBase {
+public class UsersApiTests {
 
     @Test
     void checkTotalNumberOfUsers() {
 
-        given()
-                .log().uri()
-                .log().method()
-                .log().body()
+        UserListInfoModel listOfUsersResponse = step("Send a request to get the list of users", () -> given(usersRequestSpec)
                 .when()
                 .get("/users?page=2")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .body("total", is(12));
+                .spec(usersListResponseSpec)
+                .extract().as(UserListInfoModel.class));
+
+        step("Check response", () ->
+        assertEquals(12, listOfUsersResponse.getTotal()));
     }
 
     @Test
     void checkSingleUserInfo() {
 
-        given()
-                .log().uri()
-                .log().method()
-                .log().body()
+        SingleUserResponseModel singleUserInfo = step("Send a request to check the user's info", () -> given(usersRequestSpec)
                 .when()
                 .get("/users/2")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .assertThat()
-                .body("data.id", is(2), "data.email", is("janet.weaver@reqres.in"),
-                        "data.first_name", is("Janet"), "data.last_name", is("Weaver"),
-                        "data.avatar", is("https://reqres.in/img/faces/2-image.jpg"));
-    }
+                .spec(usersResponseSpec)
+                .body(matchesJsonSchemaInClasspath("schemas/singleUser-response-schema.json"))
+                .extract().as(SingleUserResponseModel.class));
+
+       step("Check response", () -> {
+           assertEquals(2, singleUserInfo.getData().getId());
+           assertEquals("janet.weaver@reqres.in", singleUserInfo.getData().getEmail());
+           assertEquals("Janet", singleUserInfo.getData().getFirst_name());
+           assertEquals("Weaver", singleUserInfo.getData().getLast_name());
+           assertEquals("https://reqres.in/img/faces/2-image.jpg", singleUserInfo.getData().getAvatar());
+       });
+       }
 
     @Test
     void userNotFoundTest() {
 
-        given()
-                .log().uri()
-                .log().method()
-                .log().body()
+        step("Send a request of non-existent user", () -> given(usersRequestSpec)
                 .when()
                 .get("/users/23")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(404);
+                .spec(userNotFoundResponseSpec));
     }
 
     @Test
@@ -70,22 +68,18 @@ public class UsersApiTests extends TestBase {
         inputUserData.setName("morpheus");
         inputUserData.setJob("leader");
 
-        UserInfoResponseModel userCreationResponse = given()
-                .log().uri()
-                .log().method()
-                .log().body()
-                .contentType(JSON)
+        UserInfoResponseModel userCreationResponse = step("Send a request to create a user", () -> given(usersRequestSpec)
                 .body(inputUserData)
                 .when()
                 .post("/users")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(201)
-                .extract().as(UserInfoResponseModel.class);
+                .spec(userCreationResponseSpec)
+                .extract().as(UserInfoResponseModel.class));
 
+        step("Check response", () -> {
         assertEquals("morpheus", userCreationResponse.getName());
         assertEquals("leader", userCreationResponse.getJob());
+    });
     }
 
     @Test
@@ -97,22 +91,19 @@ public class UsersApiTests extends TestBase {
         updateUserData.setName("morpheus");
         updateUserData.setJob("leader");
 
-        UserInfoResponseModel userUpdateResponse = given()
-                .log().uri()
-                .log().method()
-                .log().body()
-                .contentType(JSON)
+        UserInfoResponseModel userUpdateResponse = step("Send a request to update the user's info with PATCH", () -> given(usersRequestSpec)
                 .body(updateUserData)
                 .when()
                 .patch("/users/2")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .extract().as(UserInfoResponseModel.class);
+                .spec(userUpdateResponseSpec)
+                .extract().as(UserInfoResponseModel.class));
 
-                assertEquals("morpheus", userUpdateResponse.getName());
-                assertEquals("leader", userUpdateResponse.getJob());
+        step("Check response", () ->
+                assertAll(
+                        () -> assertEquals("morpheus", userUpdateResponse.getName()),
+                        () -> assertEquals("leader", userUpdateResponse.getJob())
+                ));
     }
 
     @Test
@@ -124,36 +115,28 @@ public class UsersApiTests extends TestBase {
         updateUserData.setName("john");
         updateUserData.setJob("plumber");
 
-        UserInfoResponseModel userUpdateResponse = given()
-                .log().uri()
-                .log().method()
-                .log().body()
-                .contentType(JSON)
+        UserInfoResponseModel userUpdateResponse = step("Send a request to update the user's info with PUT", () -> given(usersRequestSpec)
                 .body(updateUserData)
                 .when()
                 .put("/users/2")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .extract().as(UserInfoResponseModel.class);
+                .spec(userUpdateResponseSpec)
+                .extract().as(UserInfoResponseModel.class));
 
-        assertEquals("john", userUpdateResponse.getName());
-        assertEquals("plumber", userUpdateResponse.getJob());
+        step("Check response", () ->
+                assertAll(
+                        () -> assertEquals("john", userUpdateResponse.getName()),
+                        () -> assertEquals("plumber", userUpdateResponse.getJob())
+                ));
     }
 
     @Test
     void successfullyDeleteUser() {
 
-        given()
-                .log().uri()
-                .log().method()
-                .log().body()
+        step("Send a request to delete a user", () -> given(usersRequestSpec)
                 .when()
                 .delete("/users/2")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(204);
+                .spec(userDeletedResponseSpec));
     }
 }
